@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>HoloView - Starr Tech Industries</title>
+    <title>HoloHand - Starr Tech Industries</title>
     
     <!-- Fonts -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -14,6 +14,8 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/controls/OrbitControls.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/loaders/STLLoader.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/loaders/GLTFLoader.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/loaders/OBJLoader.js"></script>
 
     <!-- MediaPipe Hands -->
     <script src="https://cdn.jsdelivr.net/npm/@mediapipe/camera_utils/camera_utils.js" crossorigin="anonymous"></script>
@@ -58,6 +60,110 @@
             background: radial-gradient(circle at center, #0a1114 0%, #000000 100%);
         }
 
+        /* --- INTRO SCREEN --- */
+        #intro-screen {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: #000;
+            z-index: 2000;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            transition: opacity 1s ease-out;
+        }
+
+        .logo-container {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            margin-bottom: 50px;
+        }
+
+        .trapezoid-platform {
+            width: 120px;
+            height: 20px;
+            background: rgba(0, 240, 255, 0.1);
+            border: 2px solid var(--holo-primary);
+            clip-path: polygon(20% 0%, 80% 0%, 100% 100%, 0% 100%);
+            box-shadow: 0 0 20px rgba(0, 240, 255, 0.4);
+            position: relative;
+        }
+
+        .star-icon {
+            font-size: 3rem;
+            color: var(--holo-primary);
+            margin-bottom: -15px;
+            z-index: 2;
+            animation: float 2s ease-in-out infinite;
+            text-shadow: 0 0 15px var(--holo-primary);
+        }
+
+        @keyframes float {
+            0%, 100% { transform: translateY(-5px); }
+            50% { transform: translateY(-15px); }
+        }
+
+        .intro-title {
+            font-family: var(--font-display);
+            font-size: 3rem;
+            letter-spacing: 4px;
+            margin: 10px 0 5px 0;
+            text-shadow: 0 0 20px var(--holo-primary);
+            background: linear-gradient(to bottom, #fff, var(--holo-primary));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .intro-subtitle {
+            font-family: var(--font-display);
+            font-size: 0.9rem;
+            letter-spacing: 2px;
+            color: #888;
+            text-transform: uppercase;
+        }
+
+        .input-wrapper {
+            position: relative;
+            width: 300px;
+            border-bottom: 2px solid var(--holo-grid);
+            transition: border-color 0.3s;
+        }
+        .input-wrapper:focus-within {
+            border-bottom: 2px solid var(--holo-primary);
+            box-shadow: 0 5px 10px -5px var(--holo-primary);
+        }
+
+        #intro-input {
+            width: 100%;
+            background: transparent;
+            border: none;
+            color: var(--holo-primary);
+            font-family: var(--font-display);
+            font-size: 1.5rem;
+            text-align: center;
+            text-transform: uppercase;
+            outline: none;
+            padding: 10px 0;
+        }
+
+        .loading-sequence {
+            display: none;
+            text-align: center;
+        }
+
+        .welcome-text {
+            font-family: var(--font-display);
+            font-size: 2rem;
+            margin-bottom: 30px;
+            color: var(--holo-primary);
+            text-shadow: 0 0 15px var(--holo-primary);
+        }
+
+        /* --- HUD Overlay --- */
         #hud {
             position: absolute;
             top: 0;
@@ -204,7 +310,6 @@
             min-width: 50px;
         }
 
-        /* Active state for buttons */
         .btn.active {
             background: var(--holo-primary);
             color: #000;
@@ -294,23 +399,13 @@
         }
         .toast.visible { opacity: 1; }
 
-        #loader {
-            position: fixed;
-            top: 0; left: 0; width: 100%; height: 100%;
-            background: #000;
-            z-index: 999;
-            display: flex;
-            flex-direction: column;
-            justify-content: center;
-            align-items: center;
-            transition: opacity 0.8s;
-        }
         .loader-ring {
             width: 60px; height: 60px;
             border: 4px solid var(--holo-secondary);
             border-top: 4px solid var(--holo-primary);
             border-radius: 50%;
             animation: spin 1s linear infinite;
+            margin: 0 auto;
         }
         @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
 
@@ -319,6 +414,26 @@
 </head>
 <body>
 
+    <!-- INTRO SCREEN -->
+    <div id="intro-screen">
+        <div class="logo-container" id="intro-logo">
+            <div class="star-icon">✧</div>
+            <div class="trapezoid-platform"></div>
+            <div class="intro-title">HoloHand</div>
+            <div class="intro-subtitle">by Starr Tech Industries</div>
+        </div>
+
+        <div class="input-wrapper" id="intro-input-wrapper">
+            <input type="text" id="intro-input" placeholder="ENTER USER ID" maxlength="12" autocomplete="off" autofocus>
+        </div>
+
+        <div class="loading-sequence" id="loading-sequence">
+            <div class="welcome-text">Welcome, <span id="welcome-name">User</span></div>
+            <div class="loader-ring"></div>
+        </div>
+    </div>
+
+    <!-- MAIN 3D INTERFACE -->
     <div id="canvas-container"></div>
     <video id="webcam-video" style="display:none;" playsinline></video>
     <div id="webcam-preview">
@@ -328,8 +443,8 @@
     <div id="hud">
         <header>
             <div class="brand">
-                <h1>Starr Tech Industries</h1>
-                <h2>Engineering Hologram Platform vS.8</h2>
+                <h1>HoloHand</h1>
+                <h2>by Starr Tech Industries</h2>
             </div>
             <div class="status-panel">
                 <div class="status-item">SYSTEM: <span class="status-val">ONLINE</span></div>
@@ -366,9 +481,10 @@
                     STOP ORBIT
                 </button>
                 
-                <input type="file" id="file-input" accept=".stl">
+                <!-- Updated Input for multiple formats -->
+                <input type="file" id="file-input" accept=".stl,.glb,.gltf,.obj">
                 <button class="btn" onclick="document.getElementById('file-input').click()">
-                    Upload Model (.STL)
+                    Upload Model
                 </button>
                 <button class="btn" id="reset-model-btn">
                     Reset Model
@@ -388,23 +504,53 @@
         <div id="toast-msg" class="toast">Initializing Systems...</div>
     </div>
 
-    <div id="loader">
-        <div class="loader-ring"></div>
-        <div style="margin-top: 20px; font-family: var(--font-display); color: var(--holo-primary);">LOADING CORE MODULES</div>
-    </div>
-
     <script>
+        // --- INTRO LOGIC ---
+        const introInput = document.getElementById('intro-input');
+        const introWrapper = document.getElementById('intro-input-wrapper');
+        const introLogo = document.getElementById('intro-logo');
+        const loadingSeq = document.getElementById('loading-sequence');
+        const welcomeName = document.getElementById('welcome-name');
+        const introScreen = document.getElementById('intro-screen');
+        const mainUsername = document.getElementById('username-input');
+
+        introInput.addEventListener('keydown', function(e) {
+            if (e.key === 'Enter' && this.value.trim().length > 0) {
+                startIntro(this.value.trim());
+            }
+        });
+
+        function startIntro(name) {
+            introWrapper.style.display = 'none';
+            introLogo.style.opacity = '0';
+            setTimeout(() => { introLogo.style.display = 'none'; }, 500);
+            loadingSeq.style.display = 'block';
+            welcomeName.innerText = name.toUpperCase();
+            mainUsername.value = name.toUpperCase();
+
+            setTimeout(() => {
+                introScreen.style.opacity = '0';
+                setTimeout(() => {
+                    introScreen.style.display = 'none';
+                    if (!animationStarted) {
+                        animationStarted = true;
+                        animate(0);
+                    }
+                }, 1000);
+            }, 2500);
+        }
+
+        // --- CORE LOGIC ---
         const config = {
             colors: ['#00f0ff', '#ff0055', '#00ff66', '#ffee00', '#ffffff'],
             currentColorIdx: 0,
             holoEnabled: false,
-            idleOrbitEnabled: true, // Controls the auto-orbit when hands are off
+            idleOrbitEnabled: true, 
             pinchThreshold: 0.08,
             closedThreshold: 0.1,
             lerpFactor: 0.15,
             rotationLerp: 0.2,
             scaleLerp: 0.1,
-            // Asymmetric scaling sensitivities
             scaleUpSensitivity: 3.0,
             scaleDownSensitivity: 8.0 
         };
@@ -414,19 +560,14 @@
             hands: [],
             activeHandIndex: -1,
             masterHandIndex: -1,
-            
             targetScale: 1,
             targetPosition: new THREE.Vector3(0, 5, 0),
             targetRotation: new THREE.Euler(0, 0, 0),
-            
             lastPinchDist: 0,
             handStartPos: { x: 0, y: 0 },
             initialTrans: new THREE.Vector3(),
             initialRot: new THREE.Euler(),
-            
-            // Stores the perfect scale calculated on upload
             initialLoadedScale: 1, 
-            
             desiredMode: 'IDLE',
             modeStability: 0,
             stabilityThreshold: 5
@@ -440,7 +581,6 @@
             h1Status: document.getElementById('h1-status'),
             h2Status: document.getElementById('h2-status'),
             toast: document.getElementById('toast-msg'),
-            loader: document.getElementById('loader'),
             colorPicker: document.getElementById('color-picker'),
             cycleBtn: document.getElementById('cycle-color-btn'),
             toggleHandBtn: document.getElementById('toggle-holo-hand'),
@@ -450,7 +590,6 @@
             idleOrbitBtn: document.getElementById('toggle-idle-orbit')
         };
 
-        // --- Utils ---
         const lerp = (start, end, amt) => (1 - amt) * start + amt * end;
         const clamp = (num, min, max) => Math.min(Math.max(num, min), max);
 
@@ -502,40 +641,185 @@
         syncTargets();
 
         let holoMesh = null, solidMesh = null;
+        let animationStarted = false; 
+
+        // --- Model Loading & Hologram Effect ---
+
+        // Helper: Apply hologram effect to a mesh
+        function hologramifyMesh(mesh, colorHex) {
+            const color = new THREE.Color(colorHex);
+            
+            // 1. Handle the solid part (Texture aware)
+            // If material has a map, we keep it but tint it
+            if (mesh.material.map) {
+                // Keep existing material settings but adjust for Holo look
+                mesh.material.transparent = true;
+                mesh.material.opacity = 0.7; // Semi-transparent
+                mesh.material.color = color; // Tint with holo color
+                mesh.material.side = THREE.DoubleSide;
+                mesh.material.depthWrite = true;
+            } else {
+                // Standard geometry without texture
+                mesh.material = new THREE.MeshBasicMaterial({
+                    color: color,
+                    transparent: true,
+                    opacity: 0.1,
+                    side: THREE.DoubleSide,
+                    depthWrite: false
+                });
+            }
+
+            // 2. Add Wireframe/Edge Overlay
+            // Use EdgesGeometry for cleaner lines than WireframeGeometry
+            const edges = new THREE.EdgesGeometry(mesh.geometry);
+            const line = new THREE.LineSegments(edges, new THREE.LineBasicMaterial({ 
+                color: color, 
+                transparent: true, 
+                opacity: 0.6 
+            }));
+            
+            // Add the line as a child of the mesh so it moves/rotates with it
+            mesh.add(line);
+            
+            // Store reference for color cycling
+            mesh.userData.isHolo = true;
+            mesh.userData.holoLine = line;
+        }
+
+        // Helper: Traverse and Apply
+        function processModelMeshes(object, colorHex) {
+            object.traverse((child) => {
+                if (child.isMesh) {
+                    hologramifyMesh(child, colorHex);
+                }
+            });
+        }
 
         function createDronePlaceholder() {
             const geo = new THREE.BoxGeometry(4, 1, 4);
             const wingGeo = new THREE.BoxGeometry(10, 0.2, 1);
-            const matParams = { color: config.colors[0], wireframe: true, transparent: true, opacity: 0.5 };
-            const solidParams = { color: config.colors[0], transparent: true, opacity: 0.1, side: THREE.DoubleSide };
-            const bodyWire = new THREE.LineSegments(new THREE.EdgesGeometry(geo), new THREE.LineBasicMaterial(matParams));
-            const bodySolid = new THREE.Mesh(geo, new THREE.MeshBasicMaterial(solidParams));
-            const wingsWire = new THREE.LineSegments(new THREE.EdgesGeometry(wingGeo), new THREE.LineBasicMaterial(matParams));
-            const wingsSolid = new THREE.Mesh(wingGeo, new THREE.MeshBasicMaterial(solidParams));
-            wingsSolid.position.y = 0.5;
-            modelGroup.add(bodyWire, bodySolid, wingsWire, wingsSolid);
-            holoMesh = bodyWire;
+            
+            // Manually create mesh structure for placeholder
+            const bodyMesh = new THREE.Mesh(geo, new THREE.MeshBasicMaterial({ color: config.colors[0], transparent: true, opacity: 0.1 }));
+            const wingsMesh = new THREE.Mesh(wingGeo, new THREE.MeshBasicMaterial({ color: config.colors[0], transparent: true, opacity: 0.1 }));
+            wingsMesh.position.y = 0.5;
+            
+            modelGroup.add(bodyMesh);
+            modelGroup.add(wingsMesh);
+
+            // Apply holo effect
+            hologramifyMesh(bodyMesh, config.colors[0]);
+            hologramifyMesh(wingsMesh, config.colors[0]);
+
+            holoMesh = bodyMesh; // Ref for opacity flicker
             state.initialLoadedScale = 1.0;
             syncTargets();
         }
         createDronePlaceholder();
 
-        // --- Idle Orbit Toggle Logic ---
+        // --- Loaders ---
+        const loaderStl = new THREE.STLLoader();
+        const loaderGltf = new THREE.GLTFLoader();
+        const loaderObj = new THREE.OBJLoader();
+
+        // --- File Input Handler ---
+        document.getElementById('file-input').addEventListener('change', function(e) {
+            const file = e.target.files[0];
+            if (!file) return;
+            const ext = file.name.split('.').pop().toLowerCase();
+            ui.project.innerText = file.name.split('.')[0].toUpperCase();
+            showToast("PARSING BLUEPRINT DATA...", 0);
+
+            const reader = new FileReader();
+            reader.onload = function(event) {
+                try {
+                    // 1. Clear Previous
+                    while(modelGroup.children.length > 0){ modelGroup.remove(modelGroup.children[0]); }
+                    
+                    let loadedObject = null;
+
+                    // 2. Load based on extension
+                    if (ext === 'stl') {
+                        const geometry = loaderStl.parse(event.target.result);
+                        const mesh = new THREE.Mesh(geometry, new THREE.MeshBasicMaterial()); // Material will be overwritten
+                        loadedObject = mesh;
+                    } 
+                    else if (ext === 'gltf' || ext === 'glb') {
+                        const gltf = loaderGltf.parse(event.target.result);
+                        loadedObject = gltf.scene;
+                    } 
+                    else if (ext === 'obj') {
+                        loadedObject = loaderObj.parse(event.target.result);
+                    }
+                    else {
+                        throw new Error("Unsupported Format");
+                    }
+
+                    // 3. Normalize & Center
+                    const box = new THREE.Box3().setFromObject(loadedObject);
+                    const center = box.getCenter(new THREE.Vector3());
+                    const size = box.getSize(new THREE.Vector3());
+                    const maxDim = Math.max(size.x, size.y, size.z);
+                    const scale = 10 / maxDim; // Target size ~10 units
+                    
+                    state.initialLoadedScale = scale;
+
+                    // 4. Apply Transforms
+                    // For GLTF/OBJ, we move the group to center. For STL, we center the geo.
+                    if (ext === 'stl') {
+                        loadedObject.geometry.center();
+                    } else {
+                        loadedObject.position.sub(center);
+                    }
+                    
+                    modelGroup.add(loadedObject);
+                    
+                    modelGroup.scale.set(scale, scale, scale);
+                    modelGroup.position.set(0, 5, 0); // Center on platform
+                    modelGroup.rotation.set(0, 0, 0);
+
+                    // 5. Apply Hologram Effects to all meshes
+                    processModelMeshes(loadedObject, config.colors[0]);
+                    
+                    // 6. Set Flicker Reference (first mesh found)
+                    let found = false;
+                    loadedObject.traverse(c => {
+                        if (c.isMesh && !found) {
+                            holoMesh = c;
+                            found = true;
+                        }
+                    });
+
+                    syncTargets();
+                    showToast(`LOADED ${ext.toUpperCase()}`);
+
+                } catch (err) {
+                    console.error(err);
+                    showToast("ERROR: FILE PARSING FAILED");
+                }
+            };
+
+            // GLB is binary, others text
+            if (ext === 'glb') {
+                reader.readAsArrayBuffer(file);
+            } else {
+                reader.readAsText(file);
+            }
+        });
+
         ui.idleOrbitBtn.addEventListener('click', () => {
             config.idleOrbitEnabled = !config.idleOrbitEnabled;
-            
             if (config.idleOrbitEnabled) {
                 ui.idleOrbitBtn.innerText = "STOP ORBIT";
-                ui.idleOrbitBtn.classList.remove('active'); // Remove active styling
+                ui.idleOrbitBtn.classList.remove('active');
                 showToast("ORBITATION ENABLED", 1000);
             } else {
                 ui.idleOrbitBtn.innerText = "START ORBIT";
-                ui.idleOrbitBtn.classList.add('active'); // Add active styling (Cyan bg)
+                ui.idleOrbitBtn.classList.add('active');
                 showToast("ORBITATION DISABLED", 1000);
             }
         });
 
-        // --- Reset Logic ---
         ui.resetBtn.addEventListener('click', () => {
             const s = state.initialLoadedScale;
             modelGroup.position.set(0, 5, 0);
@@ -545,54 +829,26 @@
             showToast("MODEL RESET TO INITIAL CONFIG");
         });
 
-        // --- Model Loading ---
-        document.getElementById('file-input').addEventListener('change', function(e) {
-            const file = e.target.files[0];
-            if (!file) return;
-            ui.project.innerText = file.name.split('.')[0].toUpperCase();
-            showToast("PARSING BLUEPRINT DATA...", 0);
-            const reader = new FileReader();
-            reader.onload = function(event) {
-                try {
-                    const loader = new THREE.STLLoader();
-                    const geometry = loader.parse(event.target.result);
-                    while(modelGroup.children.length > 0){ modelGroup.remove(modelGroup.children[0]); }
-                    geometry.center();
-                    const size = new THREE.Vector3();
-                    geometry.boundingBox.getSize(size);
-                    const maxDim = Math.max(size.x, size.y, size.z);
-                    const scale = 10 / maxDim;
-                    state.initialLoadedScale = scale;
-
-                    const materialWire = new THREE.LineBasicMaterial({ color: config.colors[0], transparent: true, opacity: 0.6 });
-                    const materialSolid = new THREE.MeshBasicMaterial({ color: config.colors[0], transparent: true, opacity: 0.1, side: THREE.DoubleSide });
-                    const edges = new THREE.EdgesGeometry(geometry);
-                    holoMesh = new THREE.LineSegments(edges, materialWire);
-                    solidMesh = new THREE.Mesh(geometry, materialSolid);
-                    modelGroup.add(holoMesh, solidMesh);
-                    
-                    modelGroup.scale.set(scale, scale, scale);
-                    modelGroup.position.set(0, 5, 0);
-                    modelGroup.rotation.set(0, 0, 0);
-                    
-                    syncTargets();
-                    showToast("MODEL UPLOADED & SCALED");
-                } catch (err) {
-                    showToast("ERROR: INVALID STL FILE");
-                }
-            };
-            reader.readAsArrayBuffer(file);
-        });
-
-        // --- Color System ---
         function updateThemeColor(hexColor) {
             document.documentElement.style.setProperty('--holo-primary', hexColor);
             const color = new THREE.Color(hexColor);
             gridHelper.material.color = color;
-            if (holoMesh) holoMesh.material.color.set(color);
-            if (solidMesh) solidMesh.material.color.set(color);
             ambientLight.color.set(color);
             dirLight.color.set(color);
+
+            // Update all hologram meshes
+            modelGroup.traverse((child) => {
+                if (child.isMesh && child.userData.isHolo) {
+                    // Update wireframe color
+                    if (child.userData.holoLine) {
+                        child.userData.holoLine.material.color.set(color);
+                    }
+                    // Update mesh tint (if it has a map, we tint the color property)
+                    if (child.material) {
+                        child.material.color.set(color);
+                    }
+                }
+            });
         }
         ui.cycleBtn.addEventListener('click', () => {
             config.currentColorIdx = (config.currentColorIdx + 1) % config.colors.length;
@@ -614,38 +870,28 @@
 
         ui.toggleHandBtn.addEventListener('click', () => {
             config.holoEnabled = !config.holoEnabled;
-            
             if (config.holoEnabled) {
-                // Turn ON Holo-Hand
                 ui.toggleHandBtn.innerText = "DISABLE HOLO-HAND";
-                ui.toggleHandBtn.classList.add('active'); // Adds background color
+                ui.toggleHandBtn.classList.add('active');
                 ui.camPreview.style.display = "block";
                 ui.camMini.srcObject = videoElement.srcObject;
-                
-                // Hide Idle Orbit Button because hands take over
                 ui.idleOrbitBtn.style.display = "none";
-                
                 showToast("INITIALIZING NEURAL LINK...");
                 cameraUtils.start();
             } else {
-                // Turn OFF Holo-Hand
                 ui.toggleHandBtn.innerText = "ENABLE HOLO-HAND";
-                ui.toggleHandBtn.classList.remove('active'); // Removes background color
+                ui.toggleHandBtn.classList.remove('active');
                 ui.camPreview.style.display = "none";
                 state.desiredMode = 'IDLE';
                 state.modeStability = 0;
                 updateHandUI(null, null);
-                
-                // Show Idle Orbit Button again
                 ui.idleOrbitBtn.style.display = "inline-flex";
-                
                 showToast("NEURAL LINK TERMINATED");
                 const stream = videoElement.srcObject;
                 if (stream) stream.getTracks().forEach(track => track.stop());
             }
         });
 
-        // --- Gesture Logic ---
         function detectGesture(landmarks) {
             const thumb = landmarks[4], index = landmarks[8];
             const mid = landmarks[12], ring = landmarks[16], pinky = landmarks[20];
@@ -682,11 +928,9 @@
             updateHandUI(state.hands[0], state.hands[1]);
         }
 
-        // --- Interaction Logic ---
         function processInteraction() {
             const h1 = state.hands[0];
             const h2 = state.hands[1];
-
             let desired = 'IDLE';
             if (h1 && h2) {
                 if (h1.gesture.isPinch && h2.gesture.isPinch) desired = 'SCALING';
@@ -819,8 +1063,6 @@
             const scaleVal = lerp(modelGroup.scale.x, state.targetScale, config.scaleLerp);
             modelGroup.scale.set(scaleVal, scaleVal, scaleVal);
 
-            // Idle Animation Logic
-            // Only orbit if: Mode is IDLE, Holo-Hand is OFF, AND Idle Orbit Toggle is ON
             if (state.mode === 'IDLE' && !config.holoEnabled && config.idleOrbitEnabled) {
                 modelGroup.rotation.y += 0.002;
                 modelGroup.position.y = 5 + Math.sin(time * 0.001) * 0.2;
@@ -828,9 +1070,10 @@
                 state.targetRotation.y = modelGroup.rotation.y;
             }
 
+            // Flicker effect on wireframes
             if (holoMesh && Math.random() > 0.92) {
                 const base = 0.6;
-                holoMesh.material.opacity = base + (Math.random() * 0.2 - 0.1);
+                holoMesh.userData.holoLine.material.opacity = base + (Math.random() * 0.2 - 0.1);
             }
 
             controls.update();
@@ -842,14 +1085,6 @@
             camera.updateProjectionMatrix();
             renderer.setSize(window.innerWidth, window.innerHeight);
         });
-
-        window.onload = () => {
-            setTimeout(() => {
-                ui.loader.style.opacity = 0;
-                setTimeout(() => { ui.loader.style.display = 'none'; }, 800);
-                animate(0);
-            }, 1500);
-        };
 
     </script>
 </body>
